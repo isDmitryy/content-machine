@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, Fragment } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useState, useEffect, useCallback, Fragment, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import {
   Card,
@@ -11,18 +11,18 @@ import {
   delay,
 } from "@/lib/content";
 
-export default function IdeaPage() {
+function IdeaInner() {
   const router = useRouter();
-  const params = useParams();
-  const id = params.id as string;
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id") ?? "";
 
-  const [idea,         setIdea        ] = useState<string | null>(null);
-  const [loading,      setLoading     ] = useState(true);
-  const [phase,        setPhase       ] = useState<"idle" | "generating" | "done">("idle");
-  const [pipelineStage,setPipelineStage] = useState(-1);
-  const [cards,        setCards       ] = useState<Card[]>([]);
-  const [visibleIds,   setVisibleIds  ] = useState<Set<string>>(new Set());
-  const [copiedId,     setCopiedId    ] = useState<string | null>(null);
+  const [idea,          setIdea        ] = useState<string | null>(null);
+  const [loading,       setLoading     ] = useState(true);
+  const [phase,         setPhase       ] = useState<"idle" | "generating" | "done">("idle");
+  const [pipelineStage, setPipelineStage] = useState(-1);
+  const [cards,         setCards       ] = useState<Card[]>([]);
+  const [visibleIds,    setVisibleIds  ] = useState<Set<string>>(new Set());
+  const [copiedId,      setCopiedId    ] = useState<string | null>(null);
 
   const runGeneration = useCallback(async (ideaText: string) => {
     setPhase("generating");
@@ -375,5 +375,31 @@ export default function IdeaPage() {
         </footer>
       </div>
     </main>
+  );
+}
+
+export default function IdeaClient() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          style={{
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "#08080F",
+            color: "#A78BFA",
+            fontFamily: "monospace",
+            fontSize: "13px",
+            letterSpacing: "0.1em",
+          }}
+        >
+          Загружаю идею…
+        </div>
+      }
+    >
+      <IdeaInner />
+    </Suspense>
   );
 }

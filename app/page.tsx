@@ -451,7 +451,7 @@ export default function Home() {
                       }}
                       onClick={() => {
                         setShowIdeas(false);
-                        router.push(`/ideas/${item.id}`);
+                        router.push(`/ideas?id=${item.id}`);
                       }}
                       onMouseEnter={(e) => {
                         (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(124,58,237,0.35)";
