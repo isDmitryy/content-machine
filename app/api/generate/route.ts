@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 
-const client = new OpenAI({
-  baseURL: process.env.API_BASE_URL ?? "https://openrouter.ai/api/v1",
-  apiKey:  process.env.API_KEY,
-});
-
 const SYSTEM_PROMPT = `Ты — эксперт по контент-маркетингу. По идее пользователя создай контент-систему для русскоязычной аудитории.
 
 Ответь СТРОГО в следующем формате — используй разделители точно как указано, без отступлений:
@@ -80,6 +75,11 @@ export async function POST(req: NextRequest) {
     if (!idea?.trim()) {
       return NextResponse.json({ error: "Idea is required" }, { status: 400 });
     }
+
+    const client = new OpenAI({
+      baseURL: process.env.API_BASE_URL ?? "https://openrouter.ai/api/v1",
+      apiKey:  process.env.API_KEY,
+    });
 
     const model = process.env.MODEL ?? "deepseek/deepseek-chat-v3-0324";
 
