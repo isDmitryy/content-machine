@@ -77,11 +77,11 @@ export async function POST(req: NextRequest) {
     }
 
     const client = new OpenAI({
-      baseURL: process.env.API_BASE_URL ?? "https://openrouter.ai/api/v1",
+      baseURL: process.env.API_BASE_URL ?? "https://api.groq.com/openai/v1",
       apiKey:  process.env.API_KEY,
     });
 
-    const model = process.env.MODEL ?? "deepseek/deepseek-chat-v3-0324";
+    const model = process.env.MODEL ?? "llama-3.3-70b-versatile";
 
     const completion = await client.chat.completions.create({
       model,
