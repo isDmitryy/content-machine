@@ -15,6 +15,20 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: '/icon', sizes: '512x512', type: 'image/png', purpose: 'any' },
       { src: '/icon', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
     ],
+    shortcuts: [
+      {
+        name: 'Новая идея',
+        short_name: 'Новая идея',
+        description: 'Создать новую идею с нуля',
+        url: '/',
+      },
+      {
+        name: 'Мои идеи',
+        short_name: 'Мои идеи',
+        description: 'Открыть архив сохранённых идей',
+        url: '/?openIdeas=1',
+      },
+    ],
     categories: ['productivity'],
   }
 }

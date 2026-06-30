@@ -13,6 +13,8 @@ import {
   delay,
 } from "@/lib/content";
 
+const LAST_GENERATION_KEY = "cm:last-generation";
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function Home() {
@@ -42,7 +44,18 @@ export default function Home() {
 
   // ─── Auth effect ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      // PWA shortcut "Мои идеи" deep-links to /?openIdeas=1
+      if (session && new URLSearchParams(window.location.search).get("openIdeas") === "1") {
+        setShowIdeas(true);
+        supabase
+          .from("saved_ideas")
+          .select("id, idea, created_at")
+          .order("created_at", { ascending: false })
+          .then(({ data }) => { if (data) setSavedIdeas(data); });
+      }
+    });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => setSession(s));
     return () => subscription.unsubscribe();
   }, []);
@@ -82,6 +95,13 @@ export default function Home() {
 
     setCards(aiCards);
     setPhase("done");
+
+    try {
+      localStorage.setItem(
+        LAST_GENERATION_KEY,
+        JSON.stringify({ idea: idea.trim(), cards: aiCards })
+      );
+    } catch { /* quota or unavailable, ignore */ }
 
     for (const card of aiCards) {
       await delay(210);
@@ -153,6 +173,25 @@ export default function Home() {
     setShowIdeas(true);
     loadIdeas();
   }, [loadIdeas]);
+
+  // ─── PWA: восстановление последней генерации при открытии офлайн ──────────────
+  // Синхронизация с localStorage (внешнее хранилище) после монтирования —
+  // намеренно не lazy initializer, иначе расхождение с серверным HTML при гидратации.
+  useEffect(() => {
+    if (navigator.onLine) return;
+    try {
+      const raw = localStorage.getItem(LAST_GENERATION_KEY);
+      if (!raw) return;
+      const cached = JSON.parse(raw) as { idea: string; cards: Card[] };
+      if (!cached.cards?.length) return;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrating from localStorage post-mount, not in render path
+      setIdea(cached.idea);
+      setCards(cached.cards);
+      setVisibleIds(new Set(cached.cards.map((c) => c.id)));
+      setPipelineStage(3);
+      setPhase("done");
+    } catch { /* corrupt cache, ignore */ }
+  }, []);
 
   const deleteIdea = useCallback(async (id: string) => {
     await supabase.from("saved_ideas").delete().eq("id", id);
